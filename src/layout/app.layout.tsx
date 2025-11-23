@@ -36,9 +36,9 @@ const AppLayout = () => {
         </div>
       </Card>
 
-      <div className="flex-1">
+      <Card className="flex-1 p-4 ">
         <Outlet />
-      </div>
+      </Card>
     </div>
   );
 };
