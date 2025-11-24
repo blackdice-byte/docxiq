@@ -45,10 +45,6 @@ export default function LiveCodeEditor() {
 
   return (
     <div className="h-[calc(100vh-180px)] flex flex-col bg-gray-900 text-white">
-      {/* Header */}
-      <div className="bg-gray-800 px-6 py-4 border-b border-gray-700">
-        <h1 className="text-2xl font-bold">HTML/CSS/JS Live Editor</h1>
-      </div>
 
       {/* Split Editor + Preview */}
       <Split
@@ -84,7 +80,7 @@ export default function LiveCodeEditor() {
             ref={iframeRef}
             title="preview"
             className="w-full flex-1 border-0"
-            sandbox="allow-scripts allow-modals allow-popups"
+            sandbox="allow-scripts allow-modals allow-popups allow-same-origin"
           />
         </div>
       </Split>

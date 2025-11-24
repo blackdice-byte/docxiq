@@ -2,8 +2,8 @@ import React from "react";
 import MDEditor from "@uiw/react-md-editor";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import TiptapEditor from "@/components/editors/tiptap";
-import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 import LiveCodeEditor from "@/components/editors/code-editor";
+import { EquationEditor } from "@/components/editors/equation-editor";
 
 const Editor = () => {
   const [value, setValue] = React.useState("**Hello world!**");
@@ -33,11 +33,11 @@ const Editor = () => {
         </TabsContent>
 
         <TabsContent value="html" className="h-full">
-          <LiveCodeEditor/>
+          <LiveCodeEditor />
         </TabsContent>
-        
+
         <TabsContent value="equation" className="h-full">
-          <SimpleEditor />
+          <EquationEditor />
         </TabsContent>
       </Tabs>
     </div>
