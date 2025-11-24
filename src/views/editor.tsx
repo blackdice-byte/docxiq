@@ -1,9 +1,12 @@
 import React from "react";
 import MDEditor from "@uiw/react-md-editor";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import TiptapEditor from "@/components/editors/tiptap";
+import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 
 const Editor = () => {
   const [value, setValue] = React.useState("**Hello world!**");
+  const [htmlValue, setHtmlValue] = React.useState("<p>Hello world!</p>");
 
   return (
     <div className="w-full h-full p-4">
@@ -25,12 +28,7 @@ const Editor = () => {
         </TabsContent>
 
         <TabsContent value="richtext" className="h-full">
-          <textarea
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="w-full h-[calc(100vh-180px)] p-4 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Rich text editor (coming soon...)"
-          />
+          <TiptapEditor content={htmlValue} onChange={setHtmlValue} />
         </TabsContent>
 
         <TabsContent value="html" className="h-full">
@@ -43,12 +41,7 @@ const Editor = () => {
         </TabsContent>
         
         <TabsContent value="equation" className="h-full">
-          <textarea
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="w-full h-[calc(100vh-180px)] p-4 border border-gray-300 rounded-md resize-none font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="<html>...</html>"
-          />
+          <SimpleEditor />
         </TabsContent>
       </Tabs>
     </div>
