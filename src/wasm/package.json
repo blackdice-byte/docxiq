@@ -1,0 +1,15 @@
+{
+  "name": "document-converter",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "document_converter_bg.wasm",
+    "document_converter.js",
+    "document_converter.d.ts"
+  ],
+  "main": "document_converter.js",
+  "types": "document_converter.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

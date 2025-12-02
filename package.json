@@ -9,11 +9,14 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "prepare": "husky",
-    "config": "node dice.config.ts"
+    "config": "node dice.config.ts",
+    "build:wasm": "cd rust-converter && powershell -ExecutionPolicy Bypass -File .\\build.ps1",
+    "postinstall": "echo Run 'pnpm build:wasm' to build the WASM converter module"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.16",
     "@mdxeditor/editor": "^3.50.0",
+    "@tiptap/core": "^3.11.0",
     "@monaco-editor/react": "^4.7.0",
     "@mrblenny/react-flow-chart": "^0.0.14",
     "@radix-ui/react-alert-dialog": "^1.1.15",

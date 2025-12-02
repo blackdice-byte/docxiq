@@ -23,7 +23,18 @@ dist-ssr
 *.sln
 *.sw?
 
-git-config.json
+# WASM build output
+# src/wasm/
+rust-converter/target/
+rust-converter/pkg/
+rust-converter/Cargo.lock
+
+# Environment
+.env
+.env.local
+
+
 dice.config.ts
+git-config.json
 
 .husky

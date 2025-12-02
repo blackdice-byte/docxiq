@@ -11,4 +11,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    exclude: ['@/wasm/document_converter']
+  },
+  server: {
+    fs: {
+      allow: ['..']
+    }
+  }
 })
