@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.16",
+    "@google/genai": "^1.31.0",
     "@mdxeditor/editor": "^3.50.0",
     "@monaco-editor/react": "^4.7.0",
     "@mrblenny/react-flow-chart": "^0.0.14",
