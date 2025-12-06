@@ -7,6 +7,15 @@ import { Download, FileText, Code, FileCode, Printer } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 type ConversionType = "md-html" | "md-pdf" | "latex-mathml" | "latex-pdf";
 
@@ -24,6 +33,8 @@ const Converter = () => {
   const [output, setOutput] = useState("");
   const [conversionType, setConversionType] =
     useState<ConversionType>("md-html");
+  const [showPdfDialog, setShowPdfDialog] = useState(false);
+  const [pdfFilename, setPdfFilename] = useState("document.pdf");
 
   const handleConvert = () => {
     if (!ready) {
@@ -67,8 +78,8 @@ const Converter = () => {
     }
 
     if (conversionType === "md-pdf") {
-      // For PDF, open in new window for print-to-PDF
-      handlePrintToPdf();
+      // Show dialog for PDF options
+      setShowPdfDialog(true);
       return;
     }
 
@@ -85,24 +96,36 @@ const Converter = () => {
   };
 
   const handlePrintToPdf = async () => {
+    setShowPdfDialog(false);
+    
     try {
       toast.info("Generating PDF...");
 
-      // Create a temporary container
+      // Create a temporary container with fixed width
       const container = document.createElement("div");
       container.innerHTML = output;
-      container.style.position = "absolute";
-      container.style.left = "-9999px";
-      container.style.width = "800px";
-      container.style.padding = "40px";
-      container.style.backgroundColor = "white";
+      // container.style.position = "fixed";
+      // container.style.left = "-10000px";
+      container.style.top = "0";
+      container.style.width = "210mm"; // A4 width
+      container.style.minHeight = "297mm"; // A4 height
+      container.style.padding = "20mm";
+      // container.style.backgroundColor = "white";
+      container.style.boxSizing = "border-box";
       document.body.appendChild(container);
+
+      // Wait for fonts and images to load
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Convert HTML to canvas
       const canvas = await html2canvas(container, {
         scale: 2,
         useCORS: true,
         logging: false,
+        width: container.scrollWidth,
+        height: container.scrollHeight,
+        windowWidth: container.scrollWidth,
+        windowHeight: container.scrollHeight,
       });
 
       // Remove temporary container
@@ -116,11 +139,27 @@ const Converter = () => {
         format: "a4",
       });
 
-      const imgWidth = 210; // A4 width in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pdfWidth = 210; // A4 width in mm
+      const pdfHeight = 297; // A4 height in mm
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
-      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-      pdf.save("document.pdf");
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Add first page
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      // Add additional pages if content is longer than one page
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      pdf.save(pdfFilename);
 
       toast.success("PDF downloaded!");
     } catch (err) {
@@ -216,13 +255,45 @@ const Converter = () => {
   }
 
   return (
-    <div className="h-full flex flex-col p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Document Converter</h1>
-        <p className="text-muted-foreground">
-          High-performance document conversion powered by Rust/WASM
-        </p>
-      </div>
+    <>
+      <Dialog open={showPdfDialog} onOpenChange={setShowPdfDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Download PDF</DialogTitle>
+            <DialogDescription>
+              Configure your PDF export settings
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="filename">Filename</Label>
+              <Input
+                id="filename"
+                value={pdfFilename}
+                onChange={(e) => setPdfFilename(e.target.value)}
+                placeholder="document.pdf"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPdfDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handlePrintToPdf}>
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <div className="h-full flex flex-col p-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2">Document Converter</h1>
+          <p className="text-muted-foreground">
+            High-performance document conversion powered by Rust/WASM
+          </p>
+        </div>
 
       <Tabs
         value={conversionType}
@@ -295,21 +366,42 @@ const Converter = () => {
         </div>
 
         <div className="flex flex-col">
-          <Label className="mb-2">Output</Label>
-          <div className="flex-1 p-4 border rounded-md bg-muted overflow-auto">
+          <Label className="mb-2">
+            Output Preview
+            {conversionType === "md-html" ||
+            conversionType === "md-pdf" ||
+            conversionType === "latex-pdf"
+              ? " (Rendered)"
+              : " (Source)"}
+          </Label>
+          <div className="flex-1 border rounded-md overflow-hidden">
             {output ? (
-              <pre className="font-mono text-sm whitespace-pre-wrap">
-                {output}
-              </pre>
+              conversionType === "md-html" || conversionType === "md-pdf" ? (
+                <iframe
+                  srcDoc={output}
+                  className="w-full h-full bg-white"
+                  sandbox="allow-same-origin"
+                  title="Output Preview"
+                />
+              ) : (
+                <div className="h-full p-4 bg-muted overflow-auto">
+                  <pre className="font-mono text-sm whitespace-pre-wrap">
+                    {output}
+                  </pre>
+                </div>
+              )
             ) : (
-              <p className="text-muted-foreground">
-                Output will appear here...
-              </p>
+              <div className="h-full p-4 bg-muted flex items-center justify-center">
+                <p className="text-muted-foreground">
+                  Output will appear here...
+                </p>
+              </div>
             )}
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

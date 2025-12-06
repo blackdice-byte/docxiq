@@ -42,15 +42,15 @@ pub fn markdown_to_pdf_html(markdown: &str, title: Option<String>) -> String {
     <meta charset="UTF-8">
     <title>{}</title>
     <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 20px;
-            color: #333;
-        }}
-        h1, h2, h3, h4, h5, h6 {{
+            h2, h3, h4, h5, h6 {{
             margin-top: 24px;
             margin-bottom: 16px;
             font-weight: 600;
