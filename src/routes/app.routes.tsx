@@ -3,6 +3,7 @@ import Paraphraser from "@/views/paraphraser";
 import Converter from "@/views/converter";
 import Editor from "@/views/editor";
 import Summarizer from "@/views/summarizer";
+import DiffCompare from "@/views/diff-compare";
 
 export const appRoutes = [
   {
@@ -24,5 +25,9 @@ export const appRoutes = [
   {
     path: "summarizer",
     element: <Summarizer />,
+  },
+  {
+    path: "diff-compare",
+    element: <DiffCompare />,
   },
 ];

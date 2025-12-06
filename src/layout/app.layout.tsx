@@ -11,6 +11,7 @@ const AppLayout = () => {
     { path: "/app/converter", label: "Converter" },
     { path: "/app/summarizer", label: "Summarizer" },
     { path: "/app/paraphraser", label: "Paraphraser" },
+    { path: "/app/diff-compare", label: "Diff Compare" },
   ];
 
   return (
