@@ -367,25 +367,62 @@ const user = {
         </Card>
       )}
 
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>Original Text</Label>
+            <Button variant="ghost" size="sm" asChild>
+              <label htmlFor="left-upload" className="cursor-pointer">
+                <Upload className="h-4 w-4 mr-2" />
+                Upload
+                <input
+                  id="left-upload"
+                  type="file"
+                  accept=".txt,.js,.ts,.jsx,.tsx,.py,.java,.cpp,.c,.html,.css,.json,.md"
+                  className="hidden"
+                  onChange={handleFileUpload("left")}
+                />
+              </label>
+            </Button>
+          </div>
+          <textarea
+            value={leftText}
+            onChange={(e) => setLeftText(e.target.value)}
+            className="w-full h-32 p-3 border rounded-md font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+            placeholder="Paste or type original text here..."
+          />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>Modified Text</Label>
+            <Button variant="ghost" size="sm" asChild>
+              <label htmlFor="right-upload" className="cursor-pointer">
+                <Upload className="h-4 w-4 mr-2" />
+                Upload
+                <input
+                  id="right-upload"
+                  type="file"
+                  accept=".txt,.js,.ts,.jsx,.tsx,.py,.java,.cpp,.c,.html,.css,.json,.md"
+                  className="hidden"
+                  onChange={handleFileUpload("right")}
+                />
+              </label>
+            </Button>
+          </div>
+          <textarea
+            value={rightText}
+            onChange={(e) => setRightText(e.target.value)}
+            className="w-full h-32 p-3 border rounded-md font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+            placeholder="Paste or type modified text here..."
+          />
+        </div>
+      </div>
+
       {viewMode === "side-by-side" ? (
         <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
           <div className="flex flex-col">
-            <div className="flex items-center justify-between mb-2">
-              <Label>Original Text</Label>
-              <Button variant="ghost" size="sm" asChild>
-                <label htmlFor="left-upload" className="cursor-pointer">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload
-                  <input
-                    id="left-upload"
-                    type="file"
-                    accept=".txt,.js,.ts,.jsx,.tsx,.py,.java,.cpp,.c,.html,.css,.json,.md"
-                    className="hidden"
-                    onChange={handleFileUpload("left")}
-                  />
-                </label>
-              </Button>
-            </div>
+            <Label className="mb-2">Diff View - Original</Label>
             <div className="flex-1 border rounded-md overflow-auto">
               <div className="font-mono text-sm">
                 {computeDiff.map((line, idx) => (
@@ -424,22 +461,7 @@ const user = {
           </div>
 
           <div className="flex flex-col">
-            <div className="flex items-center justify-between mb-2">
-              <Label>Modified Text</Label>
-              <Button variant="ghost" size="sm" asChild>
-                <label htmlFor="right-upload" className="cursor-pointer">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload
-                  <input
-                    id="right-upload"
-                    type="file"
-                    accept=".txt,.js,.ts,.jsx,.tsx,.py,.java,.cpp,.c,.html,.css,.json,.md"
-                    className="hidden"
-                    onChange={handleFileUpload("right")}
-                  />
-                </label>
-              </Button>
-            </div>
+            <Label className="mb-2">Diff View - Modified</Label>
             <div className="flex-1 border rounded-md overflow-auto">
               <div className="font-mono text-sm">
                 {computeDiff.map((line, idx) => (
