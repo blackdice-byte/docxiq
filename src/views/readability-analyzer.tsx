@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useMemo } from "react";
 import { useGemini, PromptType } from "@/hooks/useGemini";
 import { Button } from "@/components/ui/button";
