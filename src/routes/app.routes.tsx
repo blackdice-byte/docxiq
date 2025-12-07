@@ -7,6 +7,7 @@ import DiffCompare from "@/views/diff-compare";
 import TextUtilities from "@/views/text-utilities";
 import ReadabilityAnalyzer from "@/views/readability-analyzer";
 import KeywordExtractor from "@/views/keyword-extractor";
+import CitationGenerator from "@/views/citation-generator";
 
 export const appRoutes = [
   {
@@ -44,5 +45,9 @@ export const appRoutes = [
   {
     path: "keyword-extractor",
     element: <KeywordExtractor />,
+  },
+  {
+    path: "citation-generator",
+    element: <CitationGenerator />,
   },
 ];
