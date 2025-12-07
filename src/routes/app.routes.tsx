@@ -6,6 +6,7 @@ import Summarizer from "@/views/summarizer";
 import DiffCompare from "@/views/diff-compare";
 import TextUtilities from "@/views/text-utilities";
 import ReadabilityAnalyzer from "@/views/readability-analyzer";
+import KeywordExtractor from "@/views/keyword-extractor";
 
 export const appRoutes = [
   {
@@ -39,5 +40,9 @@ export const appRoutes = [
   {
     path: "readability-analyzer",
     element: <ReadabilityAnalyzer />,
+  },
+  {
+    path: "keyword-extractor",
+    element: <KeywordExtractor />,
   },
 ];
