@@ -474,6 +474,36 @@ const CitationGenerator = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Log all available file metadata
+    console.log("=== FILE METADATA ===");
+    console.log("File object:", file);
+    console.log("Name:", file.name);
+    console.log("Type (MIME):", file.type);
+    console.log("Size (bytes):", file.size);
+    console.log("Size (KB):", (file.size / 1024).toFixed(2));
+    console.log("Last Modified:", new Date(file.lastModified).toISOString());
+    console.log("Last Modified Date:", file.lastModified);
+    console.log("WebkitRelativePath:", file.webkitRelativePath);
+
+    // Extract info from filename
+    const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
+    const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+    console.log("Extension:", fileExtension);
+    console.log("Name without extension:", fileNameWithoutExt);
+
+    // Try to detect patterns in filename
+    const yearMatch = file.name.match(/\b(19|20)\d{2}\b/);
+    console.log("Year found in filename:", yearMatch ? yearMatch[0] : "None");
+
+    // Check for common author patterns in filename
+    const authorPatterns = file.name.match(/by[_\s-]+([^_\s-]+)/i);
+    console.log(
+      "Author pattern in filename:",
+      authorPatterns ? authorPatterns[1] : "None"
+    );
+
+    console.log("=== END FILE METADATA ===");
+
     const allowedTypes = [
       "text/plain",
       "application/pdf",
@@ -499,16 +529,73 @@ const CitationGenerator = () => {
         file.name.endsWith(".md")
       ) {
         const text = await file.text();
+
+        // Log content metadata
+        console.log("=== CONTENT METADATA ===");
+        console.log("Content length:", text.length);
+        console.log("First 500 chars:", text.slice(0, 500));
+        console.log("Line count:", text.split("\n").length);
+
+        // Try to extract metadata from content
+        const contentYearMatch = text.match(/\b(19|20)\d{2}\b/);
+        console.log(
+          "Year found in content:",
+          contentYearMatch ? contentYearMatch[0] : "None"
+        );
+
+        // Look for author patterns
+        const authorInContent = text.match(
+          /(?:by|author[s]?:?|written by|©)\s*([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)/i
+        );
+        console.log(
+          "Author found in content:",
+          authorInContent ? authorInContent[1] : "None"
+        );
+
+        // Look for title patterns (often first line or after "Title:")
+        const firstLine = text.split("\n")[0]?.trim();
+        const titleMatch = text.match(/(?:title:?)\s*(.+)/i);
+        console.log("First line (potential title):", firstLine);
+        console.log(
+          "Title pattern match:",
+          titleMatch ? titleMatch[1] : "None"
+        );
+
+        // Look for DOI
+        const doiMatch = text.match(/10\.\d{4,}\/[^\s]+/);
+        console.log("DOI found:", doiMatch ? doiMatch[0] : "None");
+
+        // Look for ISBN
+        const isbnMatch = text.match(/ISBN[:\s]*([0-9-X]+)/i);
+        console.log("ISBN found:", isbnMatch ? isbnMatch[1] : "None");
+
+        // Look for publisher
+        const publisherMatch = text.match(
+          /(?:publisher|published by|press|publishing)[:\s]*([A-Z][a-zA-Z\s]+)/i
+        );
+        console.log(
+          "Publisher found:",
+          publisherMatch ? publisherMatch[1]?.trim() : "None"
+        );
+
+        console.log("=== END CONTENT METADATA ===");
+
         setDocumentContent(text.slice(0, 5000)); // Limit content for API
-        toast.success("File loaded successfully!");
+        toast.success("File loaded successfully! Check console for metadata.");
       } else {
         // For PDF/DOCX, we'll just use the filename and let AI work with that
-        setDocumentContent(`[Document: ${file.name}]`);
-        toast.info(
-          "Document loaded. AI will generate citation based on filename."
+        console.log("=== BINARY FILE ===");
+        console.log("Cannot read content of PDF/DOCX directly in browser");
+        console.log(
+          "Would need a library like pdf.js or mammoth.js to extract text"
         );
+        console.log("=== END BINARY FILE ===");
+
+        setDocumentContent(`[Document: ${file.name}]`);
+        toast.info("Document loaded. Check console for available metadata.");
       }
-    } catch {
+    } catch (err) {
+      console.error("Error reading file:", err);
       toast.error("Failed to read file");
     }
   };
