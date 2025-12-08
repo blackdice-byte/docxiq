@@ -829,22 +829,24 @@ Output ONLY the formatted citation, nothing else.`;
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-muted rounded-md">
-                  <div className="flex items-center gap-2">
-                    <Wand2 className="h-4 w-4" />
-                    <Label htmlFor="use-ai">Use AI for formatting</Label>
+                <div className="p-3 bg-muted rounded-md space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Wand2 className="h-4 w-4" />
+                      <Label htmlFor="use-ai">Use AI for formatting</Label>
+                    </div>
+                    <Switch
+                      id="use-ai"
+                      checked={useAI}
+                      onCheckedChange={setUseAI}
+                    />
                   </div>
-                  <Switch
-                    id="use-ai"
-                    checked={useAI}
-                    onCheckedChange={setUseAI}
-                  />
-                </div>
-                {!useAI && (
                   <p className="text-xs text-muted-foreground">
-                    Manual mode: Uses built-in templates (faster, no API needed)
+                    {useAI
+                      ? "AI mode: Uses Gemini AI for precise formatting (requires API)"
+                      : "Manual mode: Uses built-in templates (faster, no API needed)"}
                   </p>
-                )}
+                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
