@@ -552,6 +552,165 @@ Output ONLY the formatted citation, nothing else.`;
     }
   };
 
+  // Extract details to form (manual review)
+  const handleExtractDetailsFromDocument = async () => {
+    if (!documentContent && !documentName) {
+      toast.error("Please upload a document first");
+      return;
+    }
+
+    try {
+      const prompt = `Extract citation metadata from the following document. Return ONLY a JSON object with the extracted fields.
+
+Document Name: ${documentName}
+Document Content (excerpt):
+${documentContent.slice(0, 3000)}
+
+Extract and return a JSON object with these fields (use empty string if not found):
+{
+  "sourceType": "book" or "journal" or "website" or "video",
+  "authors": "Author names",
+  "title": "Document title",
+  "year": "Publication year",
+  "publisher": "Publisher name (for books)",
+  "journalName": "Journal name (for articles)",
+  "volume": "Volume number",
+  "issue": "Issue number",
+  "pages": "Page range",
+  "doi": "DOI if available",
+  "url": "URL if available",
+  "websiteName": "Website name"
+}
+
+Return ONLY the JSON object, no other text.`;
+
+      const result = await generateContent({
+        prompt,
+        type: PromptType.CONVERTER,
+      });
+
+      // Parse the JSON response
+      const jsonMatch = result.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const extracted = JSON.parse(jsonMatch[0]);
+
+        // Set source type
+        if (
+          extracted.sourceType &&
+          ["book", "journal", "website", "video"].includes(extracted.sourceType)
+        ) {
+          setSourceType(extracted.sourceType as SourceType);
+        }
+
+        // Populate form fields
+        setCurrentCitation({
+          authors: extracted.authors || "",
+          title: extracted.title || "",
+          year: extracted.year || "",
+          publisher: extracted.publisher || "",
+          journalName: extracted.journalName || "",
+          volume: extracted.volume || "",
+          issue: extracted.issue || "",
+          pages: extracted.pages || "",
+          doi: extracted.doi || "",
+          url: extracted.url || "",
+          websiteName: extracted.websiteName || "",
+        });
+
+        // Switch to create tab
+        setActiveTab("create");
+        toast.success(
+          "Details extracted! Review and edit the form, then generate citation."
+        );
+      } else {
+        toast.error(
+          "Could not parse extracted details. Try generating directly instead."
+        );
+      }
+    } catch (err) {
+      toast.error(
+        `Failed to extract details: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
+    }
+  };
+
+  const handleExtractDetailsFromURL = async () => {
+    if (!urlInput.trim()) {
+      toast.error("Please enter a URL");
+      return;
+    }
+
+    try {
+      const prompt = `Extract citation metadata from the following URL. Return ONLY a JSON object with the extracted fields.
+
+URL: ${urlInput}
+
+Based on the URL structure and common patterns, extract and return a JSON object with these fields (use empty string if not found):
+{
+  "sourceType": "website" or "video" or "journal",
+  "authors": "Author or organization name",
+  "title": "Page or article title",
+  "year": "Publication year",
+  "websiteName": "Website name",
+  "url": "${urlInput}",
+  "accessDate": "December 8, 2025",
+  "channelName": "Channel name (for videos)",
+  "videoUrl": "Video URL (for videos)"
+}
+
+Return ONLY the JSON object, no other text.`;
+
+      const result = await generateContent({
+        prompt,
+        type: PromptType.CONVERTER,
+      });
+
+      // Parse the JSON response
+      const jsonMatch = result.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const extracted = JSON.parse(jsonMatch[0]);
+
+        // Set source type
+        if (
+          extracted.sourceType &&
+          ["book", "journal", "website", "video"].includes(extracted.sourceType)
+        ) {
+          setSourceType(extracted.sourceType as SourceType);
+        }
+
+        // Populate form fields
+        setCurrentCitation({
+          authors: extracted.authors || "",
+          title: extracted.title || "",
+          year: extracted.year || "",
+          websiteName: extracted.websiteName || "",
+          url: extracted.url || urlInput,
+          accessDate: extracted.accessDate || "December 8, 2025",
+          channelName: extracted.channelName || "",
+          videoUrl: extracted.videoUrl || "",
+        });
+
+        // Switch to create tab
+        setActiveTab("create");
+        toast.success(
+          "Details extracted! Review and edit the form, then generate citation."
+        );
+      } else {
+        toast.error(
+          "Could not parse extracted details. Try generating directly instead."
+        );
+      }
+    } catch (err) {
+      toast.error(
+        `Failed to extract details: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
+    }
+  };
+
   const handleGenerateFromURL = async () => {
     if (!urlInput.trim()) {
       toast.error("Please enter a URL");
@@ -1104,23 +1263,46 @@ Output ONLY the formatted citation, nothing else.`;
                   )}
                 </div>
 
-                <Button
-                  onClick={handleGenerateFromDocument}
-                  disabled={loading || !documentName}
-                  className="w-full"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 className="h-4 w-4 mr-2" />
-                      Generate from Document
-                    </>
-                  )}
-                </Button>
+                <div className="space-y-2">
+                  <Button
+                    onClick={handleGenerateFromDocument}
+                    disabled={loading || !documentName}
+                    className="w-full"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="h-4 w-4 mr-2" />
+                        Generate Citation Directly
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleExtractDetailsFromDocument}
+                    disabled={loading || !documentName}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Extracting...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Extract Details to Form
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Extract to review & edit before generating
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
@@ -1148,23 +1330,46 @@ Output ONLY the formatted citation, nothing else.`;
                   </div>
                 </div>
 
-                <Button
-                  onClick={handleGenerateFromURL}
-                  disabled={loading || !urlInput.trim()}
-                  className="w-full"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Globe className="h-4 w-4 mr-2" />
-                      Generate from URL
-                    </>
-                  )}
-                </Button>
+                <div className="space-y-2">
+                  <Button
+                    onClick={handleGenerateFromURL}
+                    disabled={loading || !urlInput.trim()}
+                    className="w-full"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Globe className="h-4 w-4 mr-2" />
+                        Generate Citation Directly
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleExtractDetailsFromURL}
+                    disabled={loading || !urlInput.trim()}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Extracting...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Extract Details to Form
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Extract to review & edit before generating
+                  </p>
+                </div>
 
                 <div className="pt-4 border-t">
                   <p className="text-xs text-muted-foreground mb-2">
