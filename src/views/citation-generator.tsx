@@ -552,162 +552,151 @@ Output ONLY the formatted citation, nothing else.`;
     }
   };
 
-  // Extract details to form (manual review)
-  const handleExtractDetailsFromDocument = async () => {
+  // Generate manual citation from document (no AI)
+  const handleManualCitationFromDocument = () => {
     if (!documentContent && !documentName) {
       toast.error("Please upload a document first");
       return;
     }
 
-    try {
-      const prompt = `Extract citation metadata from the following document. Return ONLY a JSON object with the extracted fields.
+    // Extract basic info from document content and filename
+    const content = documentContent || "";
+    const filename = documentName || "";
 
-Document Name: ${documentName}
-Document Content (excerpt):
-${documentContent.slice(0, 3000)}
+    // Try to extract title from filename (remove extension)
+    const title = filename.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
 
-Extract and return a JSON object with these fields (use empty string if not found):
-{
-  "sourceType": "book" or "journal" or "website" or "video",
-  "authors": "Author names",
-  "title": "Document title",
-  "year": "Publication year",
-  "publisher": "Publisher name (for books)",
-  "journalName": "Journal name (for articles)",
-  "volume": "Volume number",
-  "issue": "Issue number",
-  "pages": "Page range",
-  "doi": "DOI if available",
-  "url": "URL if available",
-  "websiteName": "Website name"
-}
+    // Try to extract year from content or filename
+    const yearMatch =
+      content.match(/\b(19|20)\d{2}\b/) || filename.match(/\b(19|20)\d{2}\b/);
+    const year = yearMatch ? yearMatch[0] : new Date().getFullYear().toString();
 
-Return ONLY the JSON object, no other text.`;
-
-      const result = await generateContent({
-        prompt,
-        type: PromptType.CONVERTER,
-      });
-
-      // Parse the JSON response
-      const jsonMatch = result.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const extracted = JSON.parse(jsonMatch[0]);
-
-        // Set source type
-        if (
-          extracted.sourceType &&
-          ["book", "journal", "website", "video"].includes(extracted.sourceType)
-        ) {
-          setSourceType(extracted.sourceType as SourceType);
-        }
-
-        // Populate form fields
-        setCurrentCitation({
-          authors: extracted.authors || "",
-          title: extracted.title || "",
-          year: extracted.year || "",
-          publisher: extracted.publisher || "",
-          journalName: extracted.journalName || "",
-          volume: extracted.volume || "",
-          issue: extracted.issue || "",
-          pages: extracted.pages || "",
-          doi: extracted.doi || "",
-          url: extracted.url || "",
-          websiteName: extracted.websiteName || "",
-        });
-
-        // Switch to create tab
-        setActiveTab("create");
-        toast.success(
-          "Details extracted! Review and edit the form, then generate citation."
-        );
-      } else {
-        toast.error(
-          "Could not parse extracted details. Try generating directly instead."
-        );
+    // Try to extract author from content (look for common patterns)
+    let authors = "";
+    const authorPatterns = [
+      /(?:by|author[s]?:?)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
+      /(?:written by|©)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
+    ];
+    for (const pattern of authorPatterns) {
+      const match = content.match(pattern);
+      if (match) {
+        authors = match[1];
+        break;
       }
-    } catch (err) {
-      toast.error(
-        `Failed to extract details: ${
-          err instanceof Error ? err.message : "Unknown error"
-        }`
-      );
     }
+    if (!authors) authors = "[Author]";
+
+    // Determine source type based on content/filename
+    let detectedSourceType: SourceType = "book";
+    if (
+      filename.toLowerCase().includes("article") ||
+      content.toLowerCase().includes("journal")
+    ) {
+      detectedSourceType = "journal";
+    }
+
+    // Create citation data
+    const citationData: Partial<Citation> = {
+      authors,
+      title,
+      year,
+    };
+
+    // Generate manual citation
+    const formattedCitation = formatManualCitation(
+      citationData,
+      detectedSourceType,
+      autoStyle
+    );
+
+    setAutoCitation(formattedCitation);
+    toast.success("Manual citation generated! Edit as needed.");
   };
 
-  const handleExtractDetailsFromURL = async () => {
+  // Generate manual citation from URL (no AI)
+  const handleManualCitationFromURL = () => {
     if (!urlInput.trim()) {
       toast.error("Please enter a URL");
       return;
     }
 
     try {
-      const prompt = `Extract citation metadata from the following URL. Return ONLY a JSON object with the extracted fields.
+      const url = new URL(urlInput);
 
-URL: ${urlInput}
+      // Extract website name from hostname
+      const websiteName = url.hostname.replace(/^www\./, "").split(".")[0];
+      const capitalizedWebsiteName =
+        websiteName.charAt(0).toUpperCase() + websiteName.slice(1);
 
-Based on the URL structure and common patterns, extract and return a JSON object with these fields (use empty string if not found):
-{
-  "sourceType": "website" or "video" or "journal",
-  "authors": "Author or organization name",
-  "title": "Page or article title",
-  "year": "Publication year",
-  "websiteName": "Website name",
-  "url": "${urlInput}",
-  "accessDate": "December 8, 2025",
-  "channelName": "Channel name (for videos)",
-  "videoUrl": "Video URL (for videos)"
-}
+      // Extract title from pathname
+      const pathParts = url.pathname.split("/").filter(Boolean);
+      const lastPart = pathParts[pathParts.length - 1] || "";
+      const title =
+        lastPart
+          .replace(/[-_]/g, " ")
+          .replace(/\.[^/.]+$/, "") // Remove extension
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ") || capitalizedWebsiteName;
 
-Return ONLY the JSON object, no other text.`;
+      // Determine source type
+      let detectedSourceType: SourceType = "website";
+      if (url.hostname.includes("youtube") || url.hostname.includes("vimeo")) {
+        detectedSourceType = "video";
+      }
 
-      const result = await generateContent({
-        prompt,
-        type: PromptType.CONVERTER,
+      // Get current date for access date
+      const today = new Date();
+      const accessDate = today.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       });
 
-      // Parse the JSON response
-      const jsonMatch = result.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const extracted = JSON.parse(jsonMatch[0]);
+      // Create citation data
+      const citationData: Partial<Citation> = {
+        authors: "[Author/Organization]",
+        title: title || "[Page Title]",
+        year: new Date().getFullYear().toString(),
+        websiteName: capitalizedWebsiteName,
+        url: urlInput,
+        accessDate,
+        channelName:
+          detectedSourceType === "video" ? capitalizedWebsiteName : "",
+        videoUrl: detectedSourceType === "video" ? urlInput : "",
+      };
 
-        // Set source type
-        if (
-          extracted.sourceType &&
-          ["book", "journal", "website", "video"].includes(extracted.sourceType)
-        ) {
-          setSourceType(extracted.sourceType as SourceType);
-        }
-
-        // Populate form fields
-        setCurrentCitation({
-          authors: extracted.authors || "",
-          title: extracted.title || "",
-          year: extracted.year || "",
-          websiteName: extracted.websiteName || "",
-          url: extracted.url || urlInput,
-          accessDate: extracted.accessDate || "December 8, 2025",
-          channelName: extracted.channelName || "",
-          videoUrl: extracted.videoUrl || "",
-        });
-
-        // Switch to create tab
-        setActiveTab("create");
-        toast.success(
-          "Details extracted! Review and edit the form, then generate citation."
-        );
-      } else {
-        toast.error(
-          "Could not parse extracted details. Try generating directly instead."
-        );
-      }
-    } catch (err) {
-      toast.error(
-        `Failed to extract details: ${
-          err instanceof Error ? err.message : "Unknown error"
-        }`
+      // Generate manual citation
+      const formattedCitation = formatManualCitation(
+        citationData,
+        detectedSourceType,
+        autoStyle
       );
+
+      setAutoCitation(formattedCitation);
+      toast.success("Manual citation generated! Edit placeholders as needed.");
+    } catch {
+      // Invalid URL, create basic citation
+      const citationData: Partial<Citation> = {
+        authors: "[Author]",
+        title: "[Page Title]",
+        year: new Date().getFullYear().toString(),
+        websiteName: "[Website]",
+        url: urlInput,
+        accessDate: new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+      };
+
+      const formattedCitation = formatManualCitation(
+        citationData,
+        "website",
+        autoStyle
+      );
+      setAutoCitation(formattedCitation);
+      toast.success("Manual citation generated! Edit placeholders as needed.");
     }
   };
 
@@ -1267,8 +1256,17 @@ Output ONLY the formatted citation, nothing else.`;
 
                 <div className="space-y-2">
                   <Button
+                    onClick={handleManualCitationFromDocument}
+                    disabled={!documentName}
+                    className="w-full"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Generate Manual Citation
+                  </Button>
+                  <Button
                     onClick={handleGenerateFromDocument}
                     disabled={loading || !documentName}
+                    variant="outline"
                     className="w-full"
                   >
                     {loading ? (
@@ -1279,30 +1277,12 @@ Output ONLY the formatted citation, nothing else.`;
                     ) : (
                       <>
                         <Wand2 className="h-4 w-4 mr-2" />
-                        Generate Citation Directly
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={handleExtractDetailsFromDocument}
-                    disabled={loading || !documentName}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Extracting...
-                      </>
-                    ) : (
-                      <>
-                        <FileText className="h-4 w-4 mr-2" />
-                        Extract Details to Form
+                        Generate with AI
                       </>
                     )}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center">
-                    Extract to review & edit before generating
+                    Manual: Uses templates (no API) | AI: More accurate
                   </p>
                 </div>
               </CardContent>
@@ -1334,8 +1314,17 @@ Output ONLY the formatted citation, nothing else.`;
 
                 <div className="space-y-2">
                   <Button
+                    onClick={handleManualCitationFromURL}
+                    disabled={!urlInput.trim()}
+                    className="w-full"
+                  >
+                    <Globe className="h-4 w-4 mr-2" />
+                    Generate Manual Citation
+                  </Button>
+                  <Button
                     onClick={handleGenerateFromURL}
                     disabled={loading || !urlInput.trim()}
+                    variant="outline"
                     className="w-full"
                   >
                     {loading ? (
@@ -1345,31 +1334,13 @@ Output ONLY the formatted citation, nothing else.`;
                       </>
                     ) : (
                       <>
-                        <Globe className="h-4 w-4 mr-2" />
-                        Generate Citation Directly
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={handleExtractDetailsFromURL}
-                    disabled={loading || !urlInput.trim()}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Extracting...
-                      </>
-                    ) : (
-                      <>
-                        <FileText className="h-4 w-4 mr-2" />
-                        Extract Details to Form
+                        <Wand2 className="h-4 w-4 mr-2" />
+                        Generate with AI
                       </>
                     )}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center">
-                    Extract to review & edit before generating
+                    Manual: Uses templates (no API) | AI: More accurate
                   </p>
                 </div>
 
