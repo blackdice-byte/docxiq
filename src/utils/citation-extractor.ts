@@ -1,4 +1,93 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { type Citation, type SourceType, type CitationStyle, formatManualCitation } from "./citation-formatter";
+import * as pdfjsLib from "pdfjs-dist";
+
+// Configure PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+// PDF Metadata interface
+export interface PDFMetadata {
+  title: string;
+  author: string;
+  subject: string;
+  keywords: string;
+  creator: string;
+  producer: string;
+  creationDate: string;
+  modificationDate: string;
+  pageCount: number;
+  extractedText: string;
+  doi: string;
+  isbn: string;
+}
+console.log("hello pdf extractor")
+
+// Extract PDF metadata using pdf.js
+export const extractPDFMetadata = async (file: File): Promise<PDFMetadata | null> => {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    // Get PDF metadata
+    const metadata = await pdf.getMetadata();
+    const info = metadata.info as Record<string, any>;
+    console.log(metadata.metadata)
+
+    // Extract text from first few pages
+    let extractedText = "";
+    const pagesToExtract = Math.min(3, pdf.numPages);
+
+    for (let i = 1; i <= pagesToExtract; i++) {
+      try {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(" ");
+        extractedText += pageText + " ";
+      } catch (pageError) {
+        console.warn(`Failed to extract text from page ${i}:`, pageError);
+      }
+    }
+
+    // Parse dates
+    const parseDate = (dateStr: string | undefined): string => {
+      if (!dateStr) return "";
+      try {
+        // PDF dates are in format: D:YYYYMMDDHHmmSS
+        const match = dateStr.match(/D:(\d{4})(\d{2})(\d{2})/);
+        if (match) {
+          return `${match[1]}-${match[2]}-${match[3]}`;
+        }
+        return dateStr;
+      } catch {
+        return dateStr;
+      }
+    };
+
+    // Extract DOI and ISBN from text
+    const doiMatch = extractedText.match(/10\.\d{4,}\/[^\s]+/);
+    const isbnMatch = extractedText.match(/ISBN[:\s]*([0-9-X]+)/i);
+
+    return {
+      title: info?.Title || file.name.replace(/\.pdf$/i, ""),
+      author: info?.Author || "",
+      subject: info?.Subject || "",
+      keywords: info?.Keywords || "",
+      creator: info?.Creator || "",
+      producer: info?.Producer || "",
+      creationDate: parseDate(info?.CreationDate),
+      modificationDate: parseDate(info?.ModDate),
+      pageCount: pdf.numPages,
+      extractedText: extractedText.slice(0, 2000),
+      doi: doiMatch ? doiMatch[0] : "",
+      isbn: isbnMatch ? isbnMatch[1] : "",
+    };
+  } catch (error) {
+    console.error("Failed to extract PDF metadata:", error);
+    return null;
+  }
+};
 
 // Extract metadata from document content
 export const extractMetadataFromDocument = (

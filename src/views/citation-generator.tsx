@@ -4,12 +4,34 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Copy, RotateCcw, Loader2, Plus, AlertCircle, Wand2, Upload, Link, ArrowRightLeft, Globe, FileText } from "lucide-react";
+import {
+  Copy,
+  RotateCcw,
+  Loader2,
+  Plus,
+  AlertCircle,
+  Wand2,
+  Upload,
+  Link,
+  ArrowRightLeft,
+  Globe,
+  FileText,
+} from "lucide-react";
 import { toast } from "sonner";
 
-import { CitationForm, CitationList, StyleSelector } from "@/components/citation";
+import {
+  CitationForm,
+  CitationList,
+  StyleSelector,
+} from "@/components/citation";
 import {
   type Citation,
   type SourceType,
@@ -22,12 +44,16 @@ import {
   generateCitationFromDocument,
   generateCitationFromURL,
   logFileMetadata,
+  extractPDFMetadata,
+  type PDFMetadata,
 } from "@/utils/citation-extractor";
 
 const CitationGenerator = () => {
   const { generateContent, loading, error } = useGemini();
-  const [activeTab, setActiveTab] = useState<"create" | "auto" | "convert">("create");
-  
+  const [activeTab, setActiveTab] = useState<"create" | "auto" | "convert">(
+    "create"
+  );
+
   // Create tab state
   const [sourceType, setSourceType] = useState<SourceType>("book");
   const [citationStyle, setCitationStyle] = useState<CitationStyle>("apa");
@@ -47,6 +73,8 @@ const CitationGenerator = () => {
   const [documentContent, setDocumentContent] = useState("");
   const [documentName, setDocumentName] = useState("");
   const [autoCitation, setAutoCitation] = useState("");
+  const [pdfMetadata, setPdfMetadata] = useState<PDFMetadata | null>(null);
+  const [loadingPdf, setLoadingPdf] = useState(false);
 
   // Handlers
   const handleInputChange = (field: keyof Citation, value: string) => {
@@ -55,30 +83,41 @@ const CitationGenerator = () => {
 
   const buildSourceInfo = (): string => {
     const parts: string[] = [];
-    if (currentCitation.authors) parts.push(`Author(s): ${currentCitation.authors}`);
+    if (currentCitation.authors)
+      parts.push(`Author(s): ${currentCitation.authors}`);
     if (currentCitation.title) parts.push(`Title: ${currentCitation.title}`);
     if (currentCitation.year) parts.push(`Year: ${currentCitation.year}`);
-    
+
     switch (sourceType) {
       case "book":
-        if (currentCitation.publisher) parts.push(`Publisher: ${currentCitation.publisher}`);
-        if (currentCitation.pages) parts.push(`Pages: ${currentCitation.pages}`);
+        if (currentCitation.publisher)
+          parts.push(`Publisher: ${currentCitation.publisher}`);
+        if (currentCitation.pages)
+          parts.push(`Pages: ${currentCitation.pages}`);
         break;
       case "website":
-        if (currentCitation.websiteName) parts.push(`Website Name: ${currentCitation.websiteName}`);
+        if (currentCitation.websiteName)
+          parts.push(`Website Name: ${currentCitation.websiteName}`);
         if (currentCitation.url) parts.push(`URL: ${currentCitation.url}`);
-        if (currentCitation.accessDate) parts.push(`Access Date: ${currentCitation.accessDate}`);
+        if (currentCitation.accessDate)
+          parts.push(`Access Date: ${currentCitation.accessDate}`);
         break;
       case "journal":
-        if (currentCitation.journalName) parts.push(`Journal: ${currentCitation.journalName}`);
-        if (currentCitation.volume) parts.push(`Volume: ${currentCitation.volume}`);
-        if (currentCitation.issue) parts.push(`Issue: ${currentCitation.issue}`);
-        if (currentCitation.pages) parts.push(`Pages: ${currentCitation.pages}`);
+        if (currentCitation.journalName)
+          parts.push(`Journal: ${currentCitation.journalName}`);
+        if (currentCitation.volume)
+          parts.push(`Volume: ${currentCitation.volume}`);
+        if (currentCitation.issue)
+          parts.push(`Issue: ${currentCitation.issue}`);
+        if (currentCitation.pages)
+          parts.push(`Pages: ${currentCitation.pages}`);
         if (currentCitation.doi) parts.push(`DOI: ${currentCitation.doi}`);
         break;
       case "video":
-        if (currentCitation.channelName) parts.push(`Channel: ${currentCitation.channelName}`);
-        if (currentCitation.videoUrl) parts.push(`URL: ${currentCitation.videoUrl}`);
+        if (currentCitation.channelName)
+          parts.push(`Channel: ${currentCitation.channelName}`);
+        if (currentCitation.videoUrl)
+          parts.push(`URL: ${currentCitation.videoUrl}`);
         break;
     }
     return parts.join("\n");
@@ -95,14 +134,28 @@ const CitationGenerator = () => {
     if (useAI) {
       try {
         const sourceInfo = buildSourceInfo();
-        const prompt = `Generate a citation in ${getStyleName(citationStyle)} format for the following source:\n\nSource Type: ${sourceType}\n${sourceInfo}\n\nPlease provide ONLY the formatted citation, nothing else. Follow ${getStyleName(citationStyle)} guidelines exactly.`;
-        formattedCitation = (await generateContent({ prompt, type: PromptType.CONVERTER })).trim();
+        const prompt = `Generate a citation in ${getStyleName(
+          citationStyle
+        )} format for the following source:\n\nSource Type: ${sourceType}\n${sourceInfo}\n\nPlease provide ONLY the formatted citation, nothing else. Follow ${getStyleName(
+          citationStyle
+        )} guidelines exactly.`;
+        formattedCitation = (
+          await generateContent({ prompt, type: PromptType.CONVERTER })
+        ).trim();
       } catch (err) {
-        toast.error(`Failed to generate citation: ${err instanceof Error ? err.message : "Unknown error"}`);
+        toast.error(
+          `Failed to generate citation: ${
+            err instanceof Error ? err.message : "Unknown error"
+          }`
+        );
         return;
       }
     } else {
-      formattedCitation = formatManualCitation(currentCitation, sourceType, citationStyle);
+      formattedCitation = formatManualCitation(
+        currentCitation,
+        sourceType,
+        citationStyle
+      );
     }
 
     const newCitation: Citation = {
@@ -112,7 +165,10 @@ const CitationGenerator = () => {
       authors: currentCitation.authors || "",
       title: currentCitation.title || "",
       year: currentCitation.year || "",
-      formatted: { ...({} as Record<CitationStyle, string>), [citationStyle]: formattedCitation },
+      formatted: {
+        ...({} as Record<CitationStyle, string>),
+        [citationStyle]: formattedCitation,
+      },
     };
 
     setCitations((prev) => [...prev, newCitation]);
@@ -122,14 +178,22 @@ const CitationGenerator = () => {
 
   const handleCopyAllCitations = () => {
     if (citations.length === 0) return;
-    const allCitations = citations.map((c) => c.formatted?.[citationStyle] || "").filter(Boolean).join("\n\n");
+    const allCitations = citations
+      .map((c) => c.formatted?.[citationStyle] || "")
+      .filter(Boolean)
+      .join("\n\n");
     navigator.clipboard.writeText(allCitations);
     toast.success("All citations copied!");
   };
 
   const handleDownload = () => {
     if (citations.length === 0) return;
-    const content = `BIBLIOGRAPHY (${getStyleName(citationStyle)})\n\n` + citations.map((c) => c.formatted?.[citationStyle] || "").filter(Boolean).join("\n\n");
+    const content =
+      `BIBLIOGRAPHY (${getStyleName(citationStyle)})\n\n` +
+      citations
+        .map((c) => c.formatted?.[citationStyle] || "")
+        .filter(Boolean)
+        .join("\n\n");
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -152,17 +216,49 @@ const CitationGenerator = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = ["text/plain", "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/markdown"];
+    const allowedTypes = [
+      "text/plain",
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/markdown",
+    ];
 
-    if (!allowedTypes.includes(file.type) && !file.name.endsWith(".txt") && !file.name.endsWith(".md")) {
-      toast.error("Please upload a TXT, MD, or DOCX file");
+    if (
+      !allowedTypes.includes(file.type) &&
+      !file.name.endsWith(".txt") &&
+      !file.name.endsWith(".md") &&
+      !file.name.endsWith(".pdf")
+    ) {
+      toast.error("Please upload a TXT, MD, PDF, or DOCX file");
       return;
     }
 
     setDocumentName(file.name);
+    setPdfMetadata(null);
 
     try {
-      if (file.type === "text/plain" || file.name.endsWith(".txt") || file.name.endsWith(".md")) {
+      // Handle PDF files
+      console.log(file.type)
+      if (
+        file.type === "application/pdf" ||
+        file.name.toLowerCase().endsWith(".pdf")
+      ) {
+        setLoadingPdf(true);
+        const metadata = await extractPDFMetadata(file);
+        setLoadingPdf(false);
+
+        if (metadata) {
+          setPdfMetadata(metadata);
+          setDocumentContent(metadata.extractedText);
+          toast.success("PDF metadata extracted!");
+        } else {
+          toast.error("Failed to extract PDF metadata");
+        }
+      } else if (
+        file.type === "text/plain" ||
+        file.name.endsWith(".txt") ||
+        file.name.endsWith(".md")
+      ) {
         const text = await file.text();
         logFileMetadata(file, text);
         setDocumentContent(text.slice(0, 5000));
@@ -173,6 +269,7 @@ const CitationGenerator = () => {
         toast.info("Document loaded.");
       }
     } catch {
+      setLoadingPdf(false);
       toast.error("Failed to read file");
     }
   };
@@ -183,7 +280,11 @@ const CitationGenerator = () => {
       toast.error("Please upload a document first");
       return;
     }
-    const formattedCitation = generateCitationFromDocument(documentContent, documentName, autoStyle);
+    const formattedCitation = generateCitationFromDocument(
+      documentContent,
+      documentName,
+      autoStyle
+    );
     setAutoCitation(formattedCitation);
     toast.success("Manual citation generated!");
   };
@@ -196,7 +297,9 @@ const CitationGenerator = () => {
     }
 
     try {
-      const prompt = `Based on the following document information, extract metadata and generate a citation in ${getStyleName(autoStyle)} format.
+      const prompt = `Based on the following document information, extract metadata and generate a citation in ${getStyleName(
+        autoStyle
+      )} format.
 
 Document Name: ${documentName}
 Document Content (excerpt):
@@ -211,11 +314,18 @@ If information is missing, make reasonable inferences from the content or use [U
 
 Output ONLY the formatted citation, nothing else.`;
 
-      const result = await generateContent({ prompt, type: PromptType.CONVERTER });
+      const result = await generateContent({
+        prompt,
+        type: PromptType.CONVERTER,
+      });
       setAutoCitation(result.trim());
       toast.success("Citation generated from document!");
     } catch (err) {
-      toast.error(`Failed to generate citation: ${err instanceof Error ? err.message : "Unknown error"}`);
+      toast.error(
+        `Failed to generate citation: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
     }
   };
 
@@ -238,7 +348,9 @@ Output ONLY the formatted citation, nothing else.`;
     }
 
     try {
-      const prompt = `Generate a citation in ${getStyleName(autoStyle)} format for the following URL:
+      const prompt = `Generate a citation in ${getStyleName(
+        autoStyle
+      )} format for the following URL:
 
 URL: ${urlInput}
 
@@ -250,11 +362,18 @@ Please:
 
 Output ONLY the formatted citation, nothing else.`;
 
-      const result = await generateContent({ prompt, type: PromptType.CONVERTER });
+      const result = await generateContent({
+        prompt,
+        type: PromptType.CONVERTER,
+      });
       setAutoCitation(result.trim());
       toast.success("Citation generated from URL!");
     } catch (err) {
-      toast.error(`Failed to generate citation: ${err instanceof Error ? err.message : "Unknown error"}`);
+      toast.error(
+        `Failed to generate citation: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
     }
   };
 
@@ -266,7 +385,10 @@ Output ONLY the formatted citation, nothing else.`;
       authors: "Auto-generated",
       title: documentName || urlInput || "Unknown",
       year: new Date().getFullYear().toString(),
-      formatted: { ...({} as Record<CitationStyle, string>), [autoStyle]: autoCitation },
+      formatted: {
+        ...({} as Record<CitationStyle, string>),
+        [autoStyle]: autoCitation,
+      },
     };
     setCitations((prev) => [...prev, newCitation]);
     toast.success("Citation added to list!");
@@ -283,12 +405,27 @@ Output ONLY the formatted citation, nothing else.`;
       return;
     }
     try {
-      const prompt = `Convert the following citations from ${getStyleName(sourceStyle)} format to ${getStyleName(targetStyle)} format.\n\nInput Citations (${getStyleName(sourceStyle)}):\n${inputCitations}\n\nPlease convert each citation to ${getStyleName(targetStyle)} format. Maintain the same order. Output ONLY the converted citations, one per line, with no additional text or explanations.`;
-      const result = await generateContent({ prompt, type: PromptType.CONVERTER });
+      const prompt = `Convert the following citations from ${getStyleName(
+        sourceStyle
+      )} format to ${getStyleName(
+        targetStyle
+      )} format.\n\nInput Citations (${getStyleName(
+        sourceStyle
+      )}):\n${inputCitations}\n\nPlease convert each citation to ${getStyleName(
+        targetStyle
+      )} format. Maintain the same order. Output ONLY the converted citations, one per line, with no additional text or explanations.`;
+      const result = await generateContent({
+        prompt,
+        type: PromptType.CONVERTER,
+      });
       setConvertedCitations(result.trim());
       toast.success("Citations converted!");
     } catch (err) {
-      toast.error(`Failed to convert citations: ${err instanceof Error ? err.message : "Unknown error"}`);
+      toast.error(
+        `Failed to convert citations: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
     }
   };
 
@@ -308,6 +445,7 @@ Output ONLY the formatted citation, nothing else.`;
     setDocumentContent("");
     setDocumentName("");
     setAutoCitation("");
+    setPdfMetadata(null);
     toast.info("Form cleared");
   };
 
@@ -323,14 +461,29 @@ Output ONLY the formatted citation, nothing else.`;
     <div className="h-full flex flex-col p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Citation Generator</h1>
-        <p className="text-muted-foreground">Create citations in multiple formats or convert between citation styles</p>
+        <p className="text-muted-foreground">
+          Create citations in multiple formats or convert between citation
+          styles
+        </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "create" | "auto" | "convert")}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as "create" | "auto" | "convert")}
+      >
         <TabsList className="mb-4">
-          <TabsTrigger value="create"><Plus className="h-4 w-4 mr-2" />Create Citations</TabsTrigger>
-          <TabsTrigger value="auto"><Upload className="h-4 w-4 mr-2" />Auto-Generate</TabsTrigger>
-          <TabsTrigger value="convert"><ArrowRightLeft className="h-4 w-4 mr-2" />Convert Format</TabsTrigger>
+          <TabsTrigger value="create">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Citations
+          </TabsTrigger>
+          <TabsTrigger value="auto">
+            <Upload className="h-4 w-4 mr-2" />
+            Auto-Generate
+          </TabsTrigger>
+          <TabsTrigger value="convert">
+            <ArrowRightLeft className="h-4 w-4 mr-2" />
+            Convert Format
+          </TabsTrigger>
         </TabsList>
 
         {/* Create Tab */}
@@ -339,7 +492,9 @@ Output ONLY the formatted citation, nothing else.`;
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Source Information</CardTitle>
-                <CardDescription>Enter details about your source</CardDescription>
+                <CardDescription>
+                  Enter details about your source
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <CitationForm
@@ -353,10 +508,26 @@ Output ONLY the formatted citation, nothing else.`;
                   onUseAIChange={setUseAI}
                 />
                 <div className="flex gap-2 pt-4">
-                  <Button onClick={handleGenerateCitation} disabled={loading && useAI}>
-                    {loading && useAI ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <><Plus className="h-4 w-4 mr-2" />Generate Citation</>}
+                  <Button
+                    onClick={handleGenerateCitation}
+                    disabled={loading && useAI}
+                  >
+                    {loading && useAI ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Generate Citation
+                      </>
+                    )}
                   </Button>
-                  <Button onClick={handleReset} variant="outline"><RotateCcw className="h-4 w-4 mr-2" />Clear</Button>
+                  <Button onClick={handleReset} variant="outline">
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Clear
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -378,27 +549,149 @@ Output ONLY the formatted citation, nothing else.`;
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Upload Document</CardTitle>
-                <CardDescription>Upload a document to generate a citation</CardDescription>
+                <CardDescription>
+                  Upload a document to generate a citation
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <StyleSelector value={autoStyle} onChange={setAutoStyle} />
                 <div className="border-2 border-dashed rounded-lg p-6 text-center">
                   <Upload className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground mb-3">Upload a document (TXT, MD, DOCX)</p>
-                  <Button variant="outline" asChild>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Upload a document (TXT, MD, PDF, DOCX)
+                  </p>
+                  <Button variant="outline" asChild disabled={loadingPdf}>
                     <label htmlFor="doc-upload" className="cursor-pointer">
-                      Choose File
-                      <input id="doc-upload" type="file" accept=".txt,.md,.docx,.pdf" className="hidden" onChange={handleFileUpload} />
+                      {loadingPdf ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Extracting...
+                        </>
+                      ) : (
+                        "Choose File"
+                      )}
+                      <input
+                        id="doc-upload"
+                        type="file"
+                        accept=".txt,.md,.docx,.pdf"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                      />
                     </label>
                   </Button>
-                  {documentName && <p className="mt-3 text-sm font-medium text-green-600 dark:text-green-400">✓ {documentName}</p>}
+                  {documentName && (
+                    <p className="mt-3 text-sm font-medium text-green-600 dark:text-green-400">
+                      ✓ {documentName}
+                    </p>
+                  )}
                 </div>
+
+                {/* PDF Metadata Display */}
+                {pdfMetadata && (
+                  <div className="border rounded-lg p-4 bg-muted/50 space-y-2">
+                    <h4 className="font-semibold text-sm flex items-center gap-2">
+                      <FileText className="h-4 w-4" /> PDF Metadata
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {pdfMetadata.title && (
+                        <div>
+                          <span className="text-muted-foreground">Title:</span>{" "}
+                          {pdfMetadata.title}
+                        </div>
+                      )}
+                      {pdfMetadata.author && (
+                        <div>
+                          <span className="text-muted-foreground">Author:</span>{" "}
+                          {pdfMetadata.author}
+                        </div>
+                      )}
+                      {pdfMetadata.creationDate && (
+                        <div>
+                          <span className="text-muted-foreground">
+                            Created:
+                          </span>{" "}
+                          {pdfMetadata.creationDate}
+                        </div>
+                      )}
+                      {pdfMetadata.pageCount > 0 && (
+                        <div>
+                          <span className="text-muted-foreground">Pages:</span>{" "}
+                          {pdfMetadata.pageCount}
+                        </div>
+                      )}
+                      {pdfMetadata.subject && (
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">
+                            Subject:
+                          </span>{" "}
+                          {pdfMetadata.subject}
+                        </div>
+                      )}
+                      {pdfMetadata.keywords && (
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">
+                            Keywords:
+                          </span>{" "}
+                          {pdfMetadata.keywords}
+                        </div>
+                      )}
+                      {pdfMetadata.doi && (
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">DOI:</span>{" "}
+                          {pdfMetadata.doi}
+                        </div>
+                      )}
+                      {pdfMetadata.isbn && (
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">ISBN:</span>{" "}
+                          {pdfMetadata.isbn}
+                        </div>
+                      )}
+                      {pdfMetadata.creator && (
+                        <div>
+                          <span className="text-muted-foreground">
+                            Creator:
+                          </span>{" "}
+                          {pdfMetadata.creator}
+                        </div>
+                      )}
+                      {pdfMetadata.producer && (
+                        <div>
+                          <span className="text-muted-foreground">
+                            Producer:
+                          </span>{" "}
+                          {pdfMetadata.producer}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-2">
-                  <Button onClick={handleManualCitationFromDocument} disabled={!documentName} className="w-full">
-                    <FileText className="h-4 w-4 mr-2" />Generate Manual Citation
+                  <Button
+                    onClick={handleManualCitationFromDocument}
+                    disabled={!documentName}
+                    className="w-full"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Generate Manual Citation
                   </Button>
-                  <Button onClick={handleGenerateFromDocument} disabled={loading || !documentName} variant="outline" className="w-full">
-                    {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <><Wand2 className="h-4 w-4 mr-2" />Generate with AI</>}
+                  <Button
+                    onClick={handleGenerateFromDocument}
+                    disabled={loading || !documentName}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="h-4 w-4 mr-2" />
+                        Generate with AI
+                      </>
+                    )}
                   </Button>
                 </div>
               </CardContent>
@@ -407,22 +700,50 @@ Output ONLY the formatted citation, nothing else.`;
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Generate from URL</CardTitle>
-                <CardDescription>Enter a URL to generate a citation</CardDescription>
+                <CardDescription>
+                  Enter a URL to generate a citation
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="url-input">Website URL</Label>
                   <div className="relative">
                     <Link className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="url-input" value={urlInput} onChange={(e) => setUrlInput(e.target.value)} placeholder="https://example.com/article" className="pl-10" />
+                    <Input
+                      id="url-input"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      placeholder="https://example.com/article"
+                      className="pl-10"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Button onClick={handleManualCitationFromURL} disabled={!urlInput.trim()} className="w-full">
-                    <Globe className="h-4 w-4 mr-2" />Generate Manual Citation
+                  <Button
+                    onClick={handleManualCitationFromURL}
+                    disabled={!urlInput.trim()}
+                    className="w-full"
+                  >
+                    <Globe className="h-4 w-4 mr-2" />
+                    Generate Manual Citation
                   </Button>
-                  <Button onClick={handleGenerateFromURL} disabled={loading || !urlInput.trim()} variant="outline" className="w-full">
-                    {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</> : <><Wand2 className="h-4 w-4 mr-2" />Generate with AI</>}
+                  <Button
+                    onClick={handleGenerateFromURL}
+                    disabled={loading || !urlInput.trim()}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="h-4 w-4 mr-2" />
+                        Generate with AI
+                      </>
+                    )}
                   </Button>
                 </div>
               </CardContent>
@@ -441,18 +762,41 @@ Output ONLY the formatted citation, nothing else.`;
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg">Generated Citation</CardTitle>
-                  <CardDescription>Review and add to your bibliography</CardDescription>
+                  <CardDescription>
+                    Review and add to your bibliography
+                  </CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => handleCopy(autoCitation)} disabled={!autoCitation}><Copy className="h-4 w-4 mr-2" />Copy</Button>
-                  <Button variant="outline" size="sm" onClick={handleAddAutoCitation} disabled={!autoCitation}><Plus className="h-4 w-4 mr-2" />Add to List</Button>
-                  <Button variant="outline" size="sm" onClick={handleResetAuto}><RotateCcw className="h-4 w-4 mr-2" />Reset</Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCopy(autoCitation)}
+                    disabled={!autoCitation}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddAutoCitation}
+                    disabled={!autoCitation}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add to List
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleResetAuto}>
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Reset
+                  </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               {autoCitation ? (
-                <div className="p-4 bg-muted rounded-md"><p className="font-mono text-sm">{autoCitation}</p></div>
+                <div className="p-4 bg-muted rounded-md">
+                  <p className="font-mono text-sm">{autoCitation}</p>
+                </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Wand2 className="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -468,32 +812,82 @@ Output ONLY the formatted citation, nothing else.`;
           <Card className="mb-4">
             <CardHeader>
               <CardTitle className="text-lg">Convert Citation Format</CardTitle>
-              <CardDescription>Paste citations in one format and convert them to another (uses AI)</CardDescription>
+              <CardDescription>
+                Paste citations in one format and convert them to another (uses
+                AI)
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-4 items-end">
-                <StyleSelector value={sourceStyle} onChange={setSourceStyle} label="Source Format" />
-                <div className="flex justify-center"><ArrowRightLeft className="h-6 w-6 text-muted-foreground" /></div>
-                <StyleSelector value={targetStyle} onChange={setTargetStyle} label="Target Format" />
+                <StyleSelector
+                  value={sourceStyle}
+                  onChange={setSourceStyle}
+                  label="Source Format"
+                />
+                <div className="flex justify-center">
+                  <ArrowRightLeft className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <StyleSelector
+                  value={targetStyle}
+                  onChange={setTargetStyle}
+                  label="Target Format"
+                />
               </div>
               <div className="flex gap-2">
-                <Button onClick={handleConvertCitations} disabled={loading || !inputCitations.trim()}>
-                  {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Converting...</> : <><ArrowRightLeft className="h-4 w-4 mr-2" />Convert</>}
+                <Button
+                  onClick={handleConvertCitations}
+                  disabled={loading || !inputCitations.trim()}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Converting...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRightLeft className="h-4 w-4 mr-2" />
+                      Convert
+                    </>
+                  )}
                 </Button>
-                <Button onClick={handleResetAll} variant="outline"><RotateCcw className="h-4 w-4 mr-2" />Reset</Button>
-                <Button onClick={() => handleCopy(convertedCitations)} variant="outline" disabled={!convertedCitations}><Copy className="h-4 w-4 mr-2" />Copy</Button>
+                <Button onClick={handleResetAll} variant="outline">
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Reset
+                </Button>
+                <Button
+                  onClick={() => handleCopy(convertedCitations)}
+                  variant="outline"
+                  disabled={!convertedCitations}
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy
+                </Button>
               </div>
             </CardContent>
           </Card>
 
           <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
             <div className="flex flex-col">
-              <Label className="mb-2">Input Citations ({getStyleName(sourceStyle)})</Label>
-              <Textarea value={inputCitations} onChange={(e) => setInputCitations(e.target.value)} className="flex-1 resize-none font-mono text-sm" placeholder="Paste your citations here..." />
+              <Label className="mb-2">
+                Input Citations ({getStyleName(sourceStyle)})
+              </Label>
+              <Textarea
+                value={inputCitations}
+                onChange={(e) => setInputCitations(e.target.value)}
+                className="flex-1 resize-none font-mono text-sm"
+                placeholder="Paste your citations here..."
+              />
             </div>
             <div className="flex flex-col">
-              <Label className="mb-2">Converted Citations ({getStyleName(targetStyle)})</Label>
-              <Textarea value={convertedCitations} readOnly className="flex-1 resize-none font-mono text-sm bg-muted" placeholder="Converted citations will appear here..." />
+              <Label className="mb-2">
+                Converted Citations ({getStyleName(targetStyle)})
+              </Label>
+              <Textarea
+                value={convertedCitations}
+                readOnly
+                className="flex-1 resize-none font-mono text-sm bg-muted"
+                placeholder="Converted citations will appear here..."
+              />
             </div>
           </div>
         </TabsContent>
