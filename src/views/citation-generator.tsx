@@ -238,7 +238,7 @@ const CitationGenerator = () => {
 
     try {
       // Handle PDF files
-      console.log(file.type)
+      console.log(file.type);
       if (
         file.type === "application/pdf" ||
         file.name.toLowerCase().endsWith(".pdf")
@@ -794,9 +794,12 @@ Output ONLY the formatted citation, nothing else.`;
             </CardHeader>
             <CardContent>
               {autoCitation ? (
-                <div className="p-4 bg-muted rounded-md">
-                  <p className="font-mono text-sm">{autoCitation}</p>
-                </div>
+                <Textarea
+                  value={autoCitation}
+                  onChange={(e) => setAutoCitation(e.target.value)}
+                  className="font-mono text-sm min-h-[100px] resize-none"
+                  placeholder="Generated citation will appear here..."
+                />
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Wand2 className="h-12 w-12 mx-auto mb-2 opacity-50" />

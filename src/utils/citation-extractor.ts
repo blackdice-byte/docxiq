@@ -31,7 +31,7 @@ export const extractPDFMetadata = async (file: File): Promise<PDFMetadata | null
     // Get PDF metadata
     const metadata = await pdf.getMetadata();
     const info = metadata.info as Record<string, any>;
-    console.log(metadata.metadata)
+    console.log(info)
 
     // Extract text from first few pages
     let extractedText = "";
