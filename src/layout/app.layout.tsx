@@ -16,6 +16,7 @@ const AppLayout = () => {
     { path: "/app/readability-analyzer", label: "Readability" },
     { path: "/app/keyword-extractor", label: "Keywords" },
     { path: "/app/citation-generator", label: "Citations" },
+    { path: "/app/translator", label: "Translator" },
   ];
 
   return (

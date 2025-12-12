@@ -8,6 +8,7 @@ import TextUtilities from "@/views/text-utilities";
 import ReadabilityAnalyzer from "@/views/readability-analyzer";
 import KeywordExtractor from "@/views/keyword-extractor";
 import CitationGenerator from "@/views/citation-generator";
+import LanguageTranslator from "@/views/language-translator";
 
 export const appRoutes = [
   {
@@ -49,5 +50,9 @@ export const appRoutes = [
   {
     path: "citation-generator",
     element: <CitationGenerator />,
+  },
+  {
+    path: "translator",
+    element: <LanguageTranslator />,
   },
 ];
