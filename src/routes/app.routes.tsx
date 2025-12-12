@@ -9,6 +9,7 @@ import ReadabilityAnalyzer from "@/views/readability-analyzer";
 import KeywordExtractor from "@/views/keyword-extractor";
 import CitationGenerator from "@/views/citation-generator";
 import LanguageTranslator from "@/views/language-translator";
+import QRGenerator from "@/views/qr-generator";
 
 export const appRoutes = [
   {
@@ -54,5 +55,9 @@ export const appRoutes = [
   {
     path: "translator",
     element: <LanguageTranslator />,
+  },
+  {
+    path: "qr-generator",
+    element: <QRGenerator />,
   },
 ];

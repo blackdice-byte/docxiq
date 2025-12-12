@@ -17,6 +17,7 @@ const AppLayout = () => {
     { path: "/app/keyword-extractor", label: "Keywords" },
     { path: "/app/citation-generator", label: "Citations" },
     { path: "/app/translator", label: "Translator" },
+    { path: "/app/qr-generator", label: "QR Code" },
   ];
 
   return (
