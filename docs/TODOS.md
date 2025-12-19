@@ -4,3 +4,4 @@
 # For Binary Files (PDF, DOCX):
 Note that browser can't read these directly
 Would need libraries like pdf.js or mammoth.js
+also use sentence transformers for paraphasing.

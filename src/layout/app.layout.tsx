@@ -20,6 +20,7 @@ const AppLayout = () => {
     { path: "/app/citation-generator", label: "Citations" },
     { path: "/app/translator", label: "Translator" },
     { path: "/app/qr-generator", label: "QR Code" },
+    { path: "/app/csv-converter", label: "CSV Converter" },
   ];
 
   return (

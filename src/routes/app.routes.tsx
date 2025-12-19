@@ -11,6 +11,7 @@ import CitationGenerator from "@/views/citation-generator";
 import LanguageTranslator from "@/views/language-translator";
 import QRGenerator from "@/views/qr-generator";
 import Settings from "@/views/settings";
+import CSVConverter from "@/views/csv-converter";
 
 export const appRoutes = [
   {
@@ -64,5 +65,9 @@ export const appRoutes = [
   {
     path: "settings",
     element: <Settings />,
+  },
+  {
+    path: "csv-converter",
+    element: <CSVConverter />,
   },
 ];
