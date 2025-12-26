@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/purity */
 "use client";
 import React from "react";
 import { motion } from "motion/react";
@@ -89,7 +90,7 @@ export const BackgroundBeams = React.memo(
             ></motion.path>
           ))}
           <defs>
-            {paths.map((path, index) => (
+            {paths.map((_, index) => (
               <motion.linearGradient
                 id={`linearGradient-${index}`}
                 key={`gradient-${index}`}
