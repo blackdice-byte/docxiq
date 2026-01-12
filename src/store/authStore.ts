@@ -21,7 +21,6 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
 
-  // Actions
   signup: (data: SignupData) => Promise<void>;
   signin: (email: string, password: string) => Promise<void>;
   initiateGoogleAuth: () => Promise<void>;
