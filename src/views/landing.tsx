@@ -7,10 +7,10 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 const VISIT_KEY = "docxiq_landing_visited";
 
 const getSessionId = () => {
-  let sessionId = localStorage.getItem("visitor_session");
+  let sessionId = sessionStorage.getItem("visitor_session");
   if (!sessionId) {
     sessionId = crypto.randomUUID();
-    localStorage.setItem("visitor_session", sessionId);
+    sessionStorage.setItem("visitor_session", sessionId);
   }
   return sessionId;
 };
