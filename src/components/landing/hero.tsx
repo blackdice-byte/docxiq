@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
+import { Link } from "react-router-dom";
 import { BackgroundBeams } from "../ui/background-beams";
 import { ArrowRight, FileText, Sparkles, Zap } from "lucide-react";
 
@@ -20,7 +20,7 @@ const Hero = () => {
         {/* Main Heading */}
         <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight mb-4 sm:mb-6 leading-tight">
           Transform Your
-          <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
             {" "}
             Documents{" "}
           </span>
@@ -58,7 +58,7 @@ const Hero = () => {
         {/* Feature Highlights */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6 max-w-4xl mx-auto">
           <div className="flex items-center gap-3 p-3 sm:p-4 rounded-lg bg-card/50 backdrop-blur border">
-            <div className="p-2 rounded-md bg-primary/10 flex-shrink-0">
+            <div className="p-2 rounded-md bg-primary/10 shrink-0">
               <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             </div>
             <div className="text-left">
@@ -72,7 +72,7 @@ const Hero = () => {
           </div>
 
           <div className="flex items-center gap-3 p-3 sm:p-4 rounded-lg bg-card/50 backdrop-blur border">
-            <div className="p-2 rounded-md bg-purple-500/10 flex-shrink-0">
+            <div className="p-2 rounded-md bg-purple-500/10 shrink-0">
               <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
             </div>
             <div className="text-left">
@@ -86,7 +86,7 @@ const Hero = () => {
           </div>
 
           <div className="flex items-center gap-3 p-3 sm:p-4 rounded-lg bg-card/50 backdrop-blur border">
-            <div className="p-2 rounded-md bg-pink-500/10 flex-shrink-0">
+            <div className="p-2 rounded-md bg-pink-500/10 shrink-0">
               <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-pink-500" />
             </div>
             <div className="text-left">

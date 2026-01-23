@@ -14,7 +14,7 @@ const Editor = () => {
   return (
     <div className="w-full h-full p-2 sm:p-4">
       <Tabs defaultValue="markdown" className="w-full h-full flex flex-col">
-        <TabsList className="w-full overflow-x-auto flex-shrink-0 justify-start">
+        <TabsList className="w-full overflow-x-auto shrink-0 justify-start">
           <TabsTrigger
             value="markdown"
             className="text-xs sm:text-sm whitespace-nowrap"
