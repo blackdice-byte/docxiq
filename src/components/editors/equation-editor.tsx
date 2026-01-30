@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "react-latex-editor/styles";
-import { Sparkles, Wand2, ArrowRightLeft } from "lucide-react";
+import { Sparkles, Wand2, ArrowRightLeft, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useEquationStore } from "@/store/equationStore";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ export function EquationEditor() {
   const [rawInput, setRawInput] = useState("");
   const [sourceFormat, setSourceFormat] = useState("plaintext");
   const [targetFormat, setTargetFormat] = useState("latex");
+  const [isCopied, setIsCopied] = useState(false);
 
   const {
     convertEquation,
@@ -95,6 +96,32 @@ export function EquationEditor() {
       toast.success("Equation validated!");
     } catch (error) {
       toast.error("Failed to validate equation");
+      console.error(error);
+    }
+  };
+
+  const handleCopyResult = async () => {
+    if (content === "<p>Start typing...</p>") {
+      toast.error("No result to copy");
+      return;
+    }
+
+    try {
+      // Extract text content from HTML
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = content;
+      const textContent = tempDiv.textContent || tempDiv.innerText || "";
+
+      await navigator.clipboard.writeText(textContent);
+      setIsCopied(true);
+      toast.success("Result copied to clipboard!");
+
+      // Reset copied state after 2 seconds
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    } catch (error) {
+      toast.error("Failed to copy result");
       console.error(error);
     }
   };
@@ -205,9 +232,31 @@ export function EquationEditor() {
         </div>
       </Card>
 
-      {/* Editor */}
-      <div className="flex-1 min-h-0">
-        <div className="h-full border rounded-lg p-4 bg-white dark:bg-gray-900">
+      {/* Result Section */}
+      <div className="flex-1 min-h-0 flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Result</h3>
+          <Button
+            onClick={handleCopyResult}
+            disabled={content === "<p>Start typing...</p>"}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            {isCopied ? (
+              <>
+                <Check className="h-4 w-4 text-green-600" />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Copy className="h-4 w-4" />
+                Copy Result
+              </>
+            )}
+          </Button>
+        </div>
+        <div className="flex-1 border rounded-lg p-4 bg-white dark:bg-gray-900 overflow-auto">
           <div className="prose dark:prose-invert max-w-none">
             <div dangerouslySetInnerHTML={{ __html: content }} />
           </div>
