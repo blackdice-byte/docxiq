@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSummarizer } from "@/hooks/useSummarizer";
+import { useSummarizerStore } from "@/store/summarizerStore";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,15 +33,7 @@ type SummaryLength = "short" | "medium" | "long";
 type SummaryFormat = "paragraph" | "bullets" | "key-points";
 
 const Summarizer = () => {
-  const { summarize, loading, error } = useSummarizer({
-    onSuccess: (summary) => {
-      setOutput(summary);
-      toast.success("Summary generated successfully!");
-    },
-    onError: (error) => {
-      toast.error(`Summarization failed: ${error}`);
-    },
-  });
+  const { summarizeText, isLoading, error, clearError } = useSummarizerStore();
 
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
@@ -57,14 +49,21 @@ const Summarizer = () => {
     }
 
     try {
-      await summarize({
+      const result = await summarizeText({
         text: input,
         summaryLength,
         summaryFormat,
         detailLevel: detailLevel[0],
       });
-    } catch {
-      // Error already handled by the hook
+
+      setOutput(result.summary);
+      toast.success("Summary generated successfully!");
+    } catch (err) {
+      toast.error(
+        `Summarization failed: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`,
+      );
     }
   };
 
@@ -99,6 +98,7 @@ const Summarizer = () => {
   const handleReset = () => {
     setInput("");
     setOutput("");
+    clearError();
     toast.info("Reset complete");
   };
 
@@ -230,8 +230,8 @@ Looking ahead, the future of AI holds both tremendous promise and significant ch
       </Card>
 
       <div className="flex gap-2 mb-4">
-        <Button onClick={handleSummarize} disabled={loading || !input.trim()}>
-          {loading ? (
+        <Button onClick={handleSummarize} disabled={isLoading || !input.trim()}>
+          {isLoading ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               Summarizing...
