@@ -1,25 +1,53 @@
 import { useState } from "react";
-import { useGemini, PromptType } from "@/hooks/useGemini";
+import { useSummarizer } from "@/hooks/useSummarizer";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Copy, FileText, RotateCcw, Download, Loader2, Upload } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Copy,
+  FileText,
+  RotateCcw,
+  Download,
+  Loader2,
+  Upload,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 type SummaryLength = "short" | "medium" | "long";
 type SummaryFormat = "paragraph" | "bullets" | "key-points";
 
 const Summarizer = () => {
-  const { generateContent, loading, error } = useGemini();
-  
+  const { summarize, loading, error } = useSummarizer({
+    onSuccess: (summary) => {
+      setOutput(summary);
+      toast.success("Summary generated successfully!");
+    },
+    onError: (error) => {
+      toast.error(`Summarization failed: ${error}`);
+    },
+  });
+
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
   const [summaryLength, setSummaryLength] = useState<SummaryLength>("medium");
-  const [summaryFormat, setSummaryFormat] = useState<SummaryFormat>("paragraph");
+  const [summaryFormat, setSummaryFormat] =
+    useState<SummaryFormat>("paragraph");
   const [detailLevel, setDetailLevel] = useState([50]);
 
   const handleSummarize = async () => {
@@ -29,29 +57,14 @@ const Summarizer = () => {
     }
 
     try {
-      const lengthInstructions = {
-        short: "in 2-3 sentences",
-        medium: "in 1-2 paragraphs",
-        long: "in 3-4 paragraphs with detailed coverage",
-      };
-
-      const formatInstructions = {
-        paragraph: "as a cohesive paragraph",
-        bullets: "as bullet points",
-        "key-points": "as numbered key points with brief explanations",
-      };
-
-      const prompt = `Summarize the following text ${lengthInstructions[summaryLength]} ${formatInstructions[summaryFormat]}. Detail level: ${detailLevel[0]}% (where 0% is extremely brief and 100% is comprehensive).\n\nText to summarize:\n\n${input}`;
-
-      const result = await generateContent({
-        prompt,
-        type: PromptType.SUMMARIZER,
+      await summarize({
+        text: input,
+        summaryLength,
+        summaryFormat,
+        detailLevel: detailLevel[0],
       });
-
-      setOutput(result);
-      toast.success("Summary generated successfully!");
-    } catch (err) {
-      toast.error(`Summarization failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+    } catch {
+      // Error already handled by the hook
     }
   };
 
@@ -127,9 +140,10 @@ Looking ahead, the future of AI holds both tremendous promise and significant ch
 
   const wordCount = input.trim() ? input.trim().split(/\s+/).length : 0;
   const outputWordCount = output.trim() ? output.trim().split(/\s+/).length : 0;
-  const compressionRatio = wordCount > 0 && outputWordCount > 0 
-    ? Math.round((1 - outputWordCount / wordCount) * 100) 
-    : 0;
+  const compressionRatio =
+    wordCount > 0 && outputWordCount > 0
+      ? Math.round((1 - outputWordCount / wordCount) * 100)
+      : 0;
 
   return (
     <div className="h-full flex flex-col p-6">
@@ -143,13 +157,18 @@ Looking ahead, the future of AI holds both tremendous promise and significant ch
       <Card className="mb-4">
         <CardHeader>
           <CardTitle className="text-lg">Summary Settings</CardTitle>
-          <CardDescription>Customize how your summary is generated</CardDescription>
+          <CardDescription>
+            Customize how your summary is generated
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Summary Length</Label>
-              <RadioGroup value={summaryLength} onValueChange={(v) => setSummaryLength(v as SummaryLength)}>
+              <RadioGroup
+                value={summaryLength}
+                onValueChange={(v) => setSummaryLength(v as SummaryLength)}
+              >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="short" id="short" />
                   <Label htmlFor="short" className="font-normal cursor-pointer">
@@ -158,7 +177,10 @@ Looking ahead, the future of AI holds both tremendous promise and significant ch
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="medium" id="medium" />
-                  <Label htmlFor="medium" className="font-normal cursor-pointer">
+                  <Label
+                    htmlFor="medium"
+                    className="font-normal cursor-pointer"
+                  >
                     Medium (1-2 paragraphs)
                   </Label>
                 </div>
@@ -173,7 +195,10 @@ Looking ahead, the future of AI holds both tremendous promise and significant ch
 
             <div className="space-y-2">
               <Label htmlFor="format">Summary Format</Label>
-              <Select value={summaryFormat} onValueChange={(v) => setSummaryFormat(v as SummaryFormat)}>
+              <Select
+                value={summaryFormat}
+                onValueChange={(v) => setSummaryFormat(v as SummaryFormat)}
+              >
                 <SelectTrigger id="format">
                   <SelectValue />
                 </SelectTrigger>
@@ -187,9 +212,7 @@ Looking ahead, the future of AI holds both tremendous promise and significant ch
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="detail">
-              Detail Level: {detailLevel[0]}%
-            </Label>
+            <Label htmlFor="detail">Detail Level: {detailLevel[0]}%</Label>
             <Slider
               id="detail"
               value={detailLevel}
@@ -199,7 +222,8 @@ Looking ahead, the future of AI holds both tremendous promise and significant ch
               className="mt-2"
             />
             <p className="text-xs text-muted-foreground">
-              Lower values create briefer summaries, higher values include more details
+              Lower values create briefer summaries, higher values include more
+              details
             </p>
           </div>
         </CardContent>
@@ -259,7 +283,9 @@ Looking ahead, the future of AI holds both tremendous promise and significant ch
         <div className="flex flex-col">
           <div className="flex items-center justify-between mb-2">
             <Label>Original Text</Label>
-            <span className="text-xs text-muted-foreground">{wordCount} words</span>
+            <span className="text-xs text-muted-foreground">
+              {wordCount} words
+            </span>
           </div>
           <Textarea
             value={input}
