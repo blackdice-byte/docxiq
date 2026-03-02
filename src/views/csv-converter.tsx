@@ -268,29 +268,29 @@ Marie Dupont,29,Paris,France`;
   };
 
   return (
-    <div className="h-full flex flex-col p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">CSV to Table Converter</h1>
-        <p className="text-muted-foreground">
+    <div className="h-full flex flex-col p-4 md:p-6 overflow-x-hidden">
+      <div className="mb-4 md:mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">CSV to Table Converter</h1>
+        <p className="text-muted-foreground text-sm md:text-base">
           Convert CSV data to HTML tables, Markdown, JSON, or Excel format
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 flex-1 min-h-0">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 flex-1 min-h-0 overflow-hidden">
         {/* Left Panel - Input */}
-        <div className="flex flex-col space-y-4">
-          <Card className="flex-1 flex flex-col">
-            <CardHeader>
-              <CardTitle className="text-lg">CSV Input</CardTitle>
-              <CardDescription>Paste CSV data or upload a file</CardDescription>
+        <div className="flex flex-col space-y-4 min-h-0">
+          <Card className="flex-1 flex flex-col overflow-hidden">
+            <CardHeader className="pb-3 md:pb-4">
+              <CardTitle className="text-base md:text-lg">CSV Input</CardTitle>
+              <CardDescription className="text-xs md:text-sm">Paste CSV data or upload a file</CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col space-y-4">
+            <CardContent className="flex-1 flex flex-col space-y-3 md:space-y-4 overflow-hidden">
               {/* Options */}
-              <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="delimiter">Delimiter:</Label>
+                  <Label htmlFor="delimiter" className="text-sm">Delimiter:</Label>
                   <Select value={delimiter} onValueChange={setDelimiter}>
-                    <SelectTrigger className="w-28">
+                    <SelectTrigger className="w-28 h-8 md:h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -309,16 +309,17 @@ Marie Dupont,29,Paris,France`;
                     checked={hasHeader}
                     onCheckedChange={setHasHeader}
                   />
-                  <Label htmlFor="has-header">First row is header</Label>
+                  <Label htmlFor="has-header" className="text-sm whitespace-nowrap">Header</Label>
                 </div>
               </div>
 
               {/* File Upload */}
-              <div className="flex gap-2">
-                <Button variant="outline" asChild>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" asChild>
                   <label className="cursor-pointer">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload CSV
+                    <Upload className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                    <span className="hidden sm:inline">Upload CSV</span>
+                    <span className="sm:hidden">Upload</span>
                     <input
                       type="file"
                       accept=".csv,.tsv,.txt"
@@ -327,8 +328,9 @@ Marie Dupont,29,Paris,France`;
                     />
                   </label>
                 </Button>
-                <Button variant="outline" onClick={loadExample}>
-                  Load Example
+                <Button variant="outline" size="sm" onClick={loadExample}>
+                  <span className="hidden sm:inline">Load Example</span>
+                  <span className="sm:hidden">Example</span>
                 </Button>
               </div>
 
@@ -336,13 +338,13 @@ Marie Dupont,29,Paris,France`;
               <Textarea
                 value={csvInput}
                 onChange={(e) => handleInputChange(e.target.value)}
-                className="flex-1 resize-none font-mono text-sm"
+                className="flex-1 resize-none font-mono text-xs md:text-sm min-h-[120px]"
                 placeholder="Paste your CSV data here..."
               />
 
               {/* Stats */}
               {parsedData.length > 0 && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {parsedData.length} rows × {headers.length} columns
                 </p>
               )}
@@ -351,73 +353,77 @@ Marie Dupont,29,Paris,France`;
         </div>
 
         {/* Right Panel - Output */}
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-3 md:space-y-4 min-h-0">
           {/* Output Format & Actions */}
           <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-4 flex-wrap">
+            <CardContent className="pt-3 md:pt-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                 <div className="flex items-center gap-2">
-                  <Label>Output Format:</Label>
+                  <Label className="text-sm whitespace-nowrap">Format:</Label>
                   <Select
                     value={outputFormat}
                     onValueChange={(v) => setOutputFormat(v as OutputFormat)}
                   >
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-28 h-8 md:h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="html">HTML Table</SelectItem>
+                      <SelectItem value="html">HTML</SelectItem>
                       <SelectItem value="markdown">Markdown</SelectItem>
                       <SelectItem value="json">JSON</SelectItem>
-                      <SelectItem value="xlsx">Excel (XLSX)</SelectItem>
+                      <SelectItem value="xlsx">Excel</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <Button
-                  onClick={handleConvert}
-                  disabled={parsedData.length === 0}
-                >
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  Convert
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleCopy}
-                  disabled={!output}
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copy
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleDownload}
-                  disabled={!output}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
-                <Button variant="outline" onClick={handleReset}>
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Reset
-                </Button>
+                <div className="flex flex-wrap gap-1 md:gap-2">
+                  <Button
+                    onClick={handleConvert}
+                    disabled={parsedData.length === 0}
+                    size="sm"
+                  >
+                    <FileSpreadsheet className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                    <span className="hidden sm:inline">Convert</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleCopy}
+                    disabled={!output}
+                    size="sm"
+                  >
+                    <Copy className="h-3 w-3 md:h-4 md:w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleDownload}
+                    disabled={!output}
+                    size="sm"
+                  >
+                    <Download className="h-3 w-3 md:h-4 md:w-4" />
+                  </Button>
+                  <Button variant="outline" onClick={handleReset} size="sm">
+                    <RotateCcw className="h-3 w-3 md:h-4 md:w-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Preview / Code Tabs */}
-          <Card className="flex-1 flex flex-col">
+          <Card className="flex-1 flex flex-col overflow-hidden">
             <CardHeader className="pb-2">
               <Tabs
                 value={activeView}
                 onValueChange={(v) => setActiveView(v as "preview" | "code")}
               >
                 <TabsList>
-                  <TabsTrigger value="preview">
-                    <Eye className="h-4 w-4 mr-1" /> Preview
+                  <TabsTrigger value="preview" className="text-xs md:text-sm">
+                    <Eye className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                    <span className="hidden sm:inline">Preview</span>
                   </TabsTrigger>
-                  <TabsTrigger value="code">
-                    <Code className="h-4 w-4 mr-1" /> Code
+                  <TabsTrigger value="code" className="text-xs md:text-sm">
+                    <Code className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                    <span className="hidden sm:inline">Code</span>
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -425,12 +431,12 @@ Marie Dupont,29,Paris,France`;
             <CardContent className="flex-1 overflow-auto">
               {activeView === "preview" ? (
                 parsedData.length > 0 ? (
-                  <div className="overflow-auto max-h-[400px] border rounded-md">
+                  <div className="overflow-auto max-h-[300px] md:max-h-[400px] border rounded-md">
                     <Table>
                       <TableHeader>
                         <TableRow>
                           {headers.map((header, i) => (
-                            <TableHead key={i} className="font-semibold">
+                            <TableHead key={i} className="font-semibold text-xs md:text-sm whitespace-nowrap">
                               {header}
                             </TableHead>
                           ))}
@@ -440,23 +446,25 @@ Marie Dupont,29,Paris,France`;
                         {parsedData.slice(0, 100).map((row, rowIndex) => (
                           <TableRow key={rowIndex}>
                             {row.map((cell, cellIndex) => (
-                              <TableCell key={cellIndex}>{cell}</TableCell>
+                              <TableCell key={cellIndex} className="text-xs md:text-sm whitespace-nowrap">
+                                {cell}
+                              </TableCell>
                             ))}
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
                     {parsedData.length > 100 && (
-                      <p className="text-sm text-muted-foreground p-2 text-center">
+                      <p className="text-xs md:text-sm text-muted-foreground p-2 text-center">
                         Showing first 100 rows of {parsedData.length}
                       </p>
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                  <div className="flex items-center justify-center h-full text-muted-foreground min-h-[150px]">
                     <div className="text-center">
-                      <FileSpreadsheet className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                      <p>No data to preview</p>
+                      <FileSpreadsheet className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">No data to preview</p>
                     </div>
                   </div>
                 )
@@ -464,7 +472,7 @@ Marie Dupont,29,Paris,France`;
                 <Textarea
                   value={output}
                   readOnly
-                  className="h-full resize-none font-mono text-sm"
+                  className="h-full resize-none font-mono text-xs md:text-sm min-h-[150px]"
                   placeholder="Converted output will appear here..."
                 />
               )}
