@@ -19,6 +19,7 @@ import {
   Globe,
   QrCode,
   Table,
+  History,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -59,17 +60,30 @@ const AppLayout = () => {
             )}
           </Button>
           <h2 className="text-lg font-semibold">DocumentIQ</h2>
-          <Link to="/app/settings">
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                location.pathname === "/app/settings" && "bg-accent",
-              )}
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link to="/app/history">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  location.pathname === "/app/history" && "bg-accent",
+                )}
+              >
+                <History className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/app/settings">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  location.pathname === "/app/settings" && "bg-accent",
+                )}
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -115,22 +129,33 @@ const AppLayout = () => {
         </div>
       </Card>
 
-      {/* Settings Icon - Desktop Only */}
-      <Link
-        to="/app/settings"
-        className="hidden md:block fixed m-5 top-4 right-4 z-50"
-      >
-        <Button
-          variant="outline"
-          size="icon"
-          className={cn(
-            "rounded-full",
-            location.pathname === "/app/settings" && "bg-accent",
-          )}
-        >
-          <Settings className="h-5 w-5" />
-        </Button>
-      </Link>
+      {/* Settings & History Icons - Desktop Only */}
+      <div className="hidden md:flex fixed m-5 top-4 right-4 z-50 gap-2">
+        <Link to="/app/history">
+          <Button
+            variant="outline"
+            size="icon"
+            className={cn(
+              "rounded-full",
+              location.pathname === "/app/history" && "bg-accent",
+            )}
+          >
+            <History className="h-5 w-5" />
+          </Button>
+        </Link>
+        <Link to="/app/settings">
+          <Button
+            variant="outline"
+            size="icon"
+            className={cn(
+              "rounded-full",
+              location.pathname === "/app/settings" && "bg-accent",
+            )}
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
+        </Link>
+      </div>
 
       {/* Main Content */}
       <Card className="flex-1 p-3 md:p-6 mt-16 md:mt-0 rounded-none md:rounded-lg">
